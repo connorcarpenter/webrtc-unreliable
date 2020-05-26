@@ -21,11 +21,8 @@ http = "0.2"
 log = "0.4"
 openssl = "0.10"
 rand = "0.7"
-tokio = { version = "0.2.0", features = ["net", "time"] }
-
-[dev-dependencies]
+tokio = { version = "0.2.0", features = ["net", "time", "macros"] }
 clap = "2.32"
 env_logger = "0.7"
 futures = { version = "0.3" }
 hyper = { version = "0.13", features = ["stream"] }
-tokio = { version = "0.2", features = ["macros"] }

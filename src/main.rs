@@ -1,4 +1,9 @@
 use clap::{App, Arg};
+
+use std::{
+    net::{ IpAddr, SocketAddr }
+};
+
 use hyper::{
     header::{self, HeaderValue},
     server::conn::AddrStream,
@@ -7,58 +12,22 @@ use hyper::{
 };
 use log::{info, warn};
 
-use webrtc_unreliable::{Server as RtcServer, MAX_MESSAGE_LEN};
+use webrtc_unreliable::{Server as RtcServer, MAX_MESSAGE_LEN, MessageType};
+
+use env_logger;
 
 #[tokio::main]
 async fn main() {
-    env_logger::init_from_env(env_logger::Env::new().default_filter_or("debug"));
+    env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
 
-    let matches = App::new("echo_server")
-        .arg(
-            Arg::with_name("data")
-                .short("d")
-                .long("data")
-                .takes_value(true)
-                .required(true)
-                .help("listen on the specified address/port for UDP WebRTC data channels"),
-        )
-        .arg(
-            Arg::with_name("public")
-                .short("p")
-                .long("public")
-                .takes_value(true)
-                .required(true)
-                .help("advertise the given address/port as the public WebRTC address/port"),
-        )
-        .arg(
-            Arg::with_name("http")
-                .short("h")
-                .long("http")
-                .takes_value(true)
-                .required(true)
-                .help("listen on the specified address/port for incoming HTTP (session reqeusts and test page"),
-        )
-        .get_matches();
-
-    let webrtc_listen_addr = matches
-        .value_of("data")
-        .unwrap()
-        .parse()
-        .expect("could not parse WebRTC data address/port");
-
-    let public_webrtc_addr = matches
-        .value_of("public")
-        .unwrap()
-        .parse()
-        .expect("could not parse advertised public WebRTC data address/port");
-
-    let session_listen_addr = matches
-        .value_of("http")
-        .unwrap()
+    let address: &str = "192.168.1.6:3171";
+    let session_listen_addr: SocketAddr = address
         .parse()
         .expect("could not parse HTTP address/port");
+    let webrtc_listen_ip: IpAddr = session_listen_addr.ip();
+    let webrtc_listen_addr = SocketAddr::new(webrtc_listen_ip, 3171);
 
-    let mut rtc_server = RtcServer::new(webrtc_listen_addr, public_webrtc_addr)
+    let mut rtc_server = RtcServer::new(webrtc_listen_addr, webrtc_listen_addr)
         .await
         .expect("could not start RTC server");
 
@@ -74,7 +43,7 @@ async fn main() {
                         || req.uri().path() == "/index.html" && req.method() == Method::GET
                     {
                         info!("serving example index HTML to {}", remote_addr);
-                        Response::builder().body(Body::from(include_str!("./echo_server.html")))
+                        Response::builder().body(Body::from(include_str!("echo_server.html")))
                     } else if req.uri().path() == "/new_rtc_session" && req.method() == Method::POST
                     {
                         info!("WebRTC session request from {}", remote_addr);
@@ -113,8 +82,8 @@ async fn main() {
             Ok(received) => {
                 if let Err(err) = rtc_server
                     .send(
-                        &message_buf[0..received.message_len],
-                        received.message_type,
+                        &[4, 8, 15, 16, 23, 42],
+                        MessageType::Binary,
                         &received.remote_addr,
                     )
                     .await

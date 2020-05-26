@@ -32,9 +32,9 @@
                 } else {
                     packet_number++
                     console.log("sending packet", packet_number);
-                    let array = new Uint8Array(1172);
-                    array[0] = packet_number;
-                    channel.send(array);
+                    // let array = new Uint8Array(1172);
+                    // array[0] = packet_number;
+                    channel.send("" + packet_number);
                     send_times[packet_number] = Date.now();
                 }
             }, SEND_INTERVAL);
