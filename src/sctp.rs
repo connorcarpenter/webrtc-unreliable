@@ -585,7 +585,7 @@ const CHUNK_TYPE_I_FORWARD_TSN: u8 = 0xc2;
 
 const INIT_ACK_PARAM_STATE_COOKIE: u16 = 0x07;
 const INIT_PARAM_FORWARD_TSN: u16 = 0xc000;
-const HEARTBEAT_PARAM_INFO: u16 = 0x07;
+const HEARTBEAT_PARAM_INFO: u16 = 0x01;
 
 enum IterParamsError {
     BufferSize,
